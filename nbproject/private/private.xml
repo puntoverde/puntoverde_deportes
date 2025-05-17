@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/C:/AppServ/www/finanzas-api/src/Controllers/DatosFacturacionController.php</file>
+            <file>file:/C:/AppServ/www/finanzas-api/src/Controllers/CategoriaController.php</file>
+            <file>file:/C:/AppServ/www/finanzas-api/src/Controllers/CuotaController.php</file>
+            <file>file:/C:/AppServ/www/finanzas-api/src/DAO/DatosFacturacionDAO.php</file>
+            <file>file:/C:/AppServ/www/finanzas-api/src/Controllers/AlmacenController.php</file>
+            <file>file:/C:/AppServ/www/finanzas-api/src/Controllers/DescuentoController.php</file>
+            <file>file:/C:/AppServ/www/finanzas-api/src/Controllers/DomicilioController.php</file>
+            <file>file:/C:/AppServ/www/finanzas-api/src/Controllers/AccionistaController.php</file>
+            <file>file:/C:/AppServ/www/finanzas-api/src/DAO/PagosDAO.php</file>
+            <file>file:/C:/AppServ/www/finanzas-api/src/Controllers/AccionController.php</file>
+            <file>file:/C:/AppServ/www/finanzas-api/routes/PagoRouter.php</file>
+            <file>file:/C:/AppServ/www/finanzas-api/src/Controllers/DocumentoController.php</file>
+            <file>file:/C:/AppServ/www/finanzas-api/src/Controllers/PagoController.php</file>
+            <file>file:/C:/AppServ/www/finanzas-api/routes/DatosFacturacionRouter.php</file>
+        </group>
+    </open-files>
+</project-private>
