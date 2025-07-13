@@ -95,10 +95,29 @@ class CursoVeranoDAO
 
    public static function getGrupoCursoVerano($curso_verano_programa)
    {
+      
 
+      /*
+         SELECT 
+	         curso_verano_programa_grupo.cve_curso_verano_programa_grupo,
+            curso_verano_programa_grupo.nombre,
+            curso_verano_programa_grupo.edad_min,
+            curso_verano_programa_grupo.edad_max,
+            curso_verano_programa_grupo.cupo,
+            #COUNT(curso_verano_inscripcion.cve_curso_verano_inscripcion) AS cupo_actual
+             ifnull(sum( CAST(curso_verano_inscripcion.estatus AS SIGNED)),0) AS cupo_actual,
+            sum( case CAST(curso_verano_inscripcion.estatus AS SIGNED) when 0 then 1 ELSE 0 END) AS bajas
+         FROM  curso_verano_programa_grupo 
+         LEFT JOIN curso_verano_inscripcion ON curso_verano_programa_grupo.cve_curso_verano_programa_grupo=curso_verano_inscripcion.cve_curso_verano_programa_grupo 
+         #AND curso_verano_inscripcion.estatus=1
+         where curso_verano_programa_grupo.cve_curso_vereno_programa=1 GROUP BY 	curso_verano_programa_grupo.cve_curso_verano_programa_grupo
+       */
 
-      $query = DB::table("curso_verano _programa_grupo")
+      $query = DB::table("curso_verano_programa_grupo")
+         // ->leftJoin("curso_verano_inscripcion",function($join){ $join->on("curso_verano_programa_grupo.cve_curso_verano_programa_grupo", "curso_verano_inscripcion.cve_curso_verano_programa_grupo")->where("curso_verano_inscripcion.estatus",1);})
+         ->leftJoin("curso_verano_inscripcion","curso_verano_programa_grupo.cve_curso_verano_programa_grupo", "curso_verano_inscripcion.cve_curso_verano_programa_grupo")
          ->where("curso_verano_programa_grupo.cve_curso_vereno_programa", $curso_verano_programa)
+         ->groupBy("curso_verano_programa_grupo.cve_curso_verano_programa_grupo")
          ->select(
             "curso_verano_programa_grupo.cve_curso_verano_programa_grupo",
             "curso_verano_programa_grupo.nombre",
@@ -106,15 +125,19 @@ class CursoVeranoDAO
             "curso_verano_programa_grupo.edad_max",
             "curso_verano_programa_grupo.cupo"
          )
+         // ->selectRaw("COUNT(curso_verano_inscripcion.cve_curso_verano_inscripcion) AS cupo_actual")
+         ->selectRaw("ifnull(sum( CAST(curso_verano_inscripcion.estatus AS SIGNED)),0) AS cupo_actual")
+         ->selectRaw("sum(case CAST(curso_verano_inscripcion.estatus AS SIGNED) when 0 then 1 ELSE 0 END) AS bajas")
          ->get();
 
+      
       return $query;
    }
 
    public static function createInscripcion($insc)
    {
 
-     
+
 
       // return DB::table("socios")->where("cve_socio",11499)->update(["foto_socio"=>file_get_contents($insc->foto)]);
 
@@ -129,8 +152,8 @@ class CursoVeranoDAO
 
 
          if ($insc->cve_cuota == 42) {
-            DB::table("persona")->where("cve_persona",$insc->cve_persona)->update(["nombre" => $insc->nombre, "apellido_paterno" => $insc->materno, "apellido_materno" => $insc->paterno, "sexo" => $insc->genero, "fecha_nacimiento" => $insc->nacimiento]);
-            DB::table("socios")->where("cve_persona",$insc->cve_persona)->update(["foto_socio"=>file_get_contents($insc->foto),"is_foto"=>11]);
+            DB::table("persona")->where("cve_persona", $insc->cve_persona)->update(["nombre" => $insc->nombre, "apellido_paterno" => $insc->materno, "apellido_materno" => $insc->paterno, "sexo" => $insc->genero, "fecha_nacimiento" => $insc->nacimiento]);
+            DB::table("socios")->where("cve_persona", $insc->cve_persona)->update(["foto_socio" => file_get_contents($insc->foto), "is_foto" => 11]);
          } else if ($insc->cve_cuota == 43) {
 
             /*if(DB::table("persona")->where("cve_persona",$insc->cve_persona)->exists())
@@ -140,12 +163,12 @@ class CursoVeranoDAO
       else{*/
 
             $cve_persona_invitado = DB::table("persona")
-               ->insertGetId(["nombre" => $insc->nombre, "apellido_paterno" => $insc->materno, "apellido_materno" => $insc->paterno, "sexo" => $insc->genero, "fecha_nacimiento" => $insc->nacimiento, "estado_civil" => "Soltero", "cve_pais" => 121, "estatus" => 1]);
+               ->insertGetId(["nombre" => $insc->nombre, "apellido_paterno" => $insc->paterno, "apellido_materno" => $insc->materno, "sexo" => $insc->genero, "fecha_nacimiento" => $insc->nacimiento, "estado_civil" => "Soltero", "cve_pais" => 121, "estatus" => 1]);
 
             $cve_direcion_invitado = DB::table("direccion")->insertGetId(["cve_colonia" => 1, "calle" => $insc->calle_numero]);
 
             DB::table("socios")
-               ->insert(["cve_accion" => 1830, "cve_persona" => $cve_persona_invitado, "cve_direccion" => $cve_direcion_invitado, "cve_profesion" => 16, "cve_parentesco" => 12, "estatus" => 1, "fecha_ingreso_accion" => Carbon::now(), "fecha_ingreso_club" => Carbon::now(), "fecha_alta" => Carbon::now(),"foto_socio"=>file_get_contents($insc->foto),"is_foto"=>11]);
+               ->insert(["cve_accion" => 1830, "cve_persona" => $cve_persona_invitado, "cve_direccion" => $cve_direcion_invitado, "cve_profesion" => 16, "cve_parentesco" => 12, "estatus" => 1, "fecha_ingreso_accion" => Carbon::now(), "fecha_ingreso_club" => Carbon::now(), "fecha_alta" => Carbon::now(), "foto_socio" => file_get_contents($insc->foto), "is_foto" => 11]);
 
             $insc->cve_persona = $cve_persona_invitado;
             //}
@@ -161,13 +184,27 @@ class CursoVeranoDAO
       else{*/
 
             $cve_persona_invitado = DB::table("persona")
-               ->insertGetId(["nombre" => $insc->nombre, "apellido_paterno" => $insc->materno, "apellido_materno" => $insc->paterno, "sexo" => $insc->genero, "fecha_nacimiento" => $insc->nacimiento, "estado_civil" => "Soltero", "cve_pais" => 121, "estatus" => 1]);
+               ->insertGetId(["nombre" => $insc->nombre, "apellido_paterno" => $insc->paterno, "apellido_materno" => $insc->materno, "sexo" => $insc->genero, "fecha_nacimiento" => $insc->nacimiento, "estado_civil" => "Soltero", "cve_pais" => 121, "estatus" => 1]);
 
             $cve_direcion_invitado = DB::table("direccion")->insertGetId(["cve_colonia" => 1, "calle" => $insc->calle_numero]);
 
             DB::table("socios")
-               ->insert(["cve_accion" => 1948, "cve_persona" => $cve_persona_invitado, "cve_direccion" => $cve_direcion_invitado, "cve_profesion" => 16, "cve_parentesco" => 12, "estatus" => 1, "fecha_ingreso_accion" => Carbon::now(), "fecha_ingreso_club" => Carbon::now(), "fecha_alta" => Carbon::now(), "foto_socio"=>file_get_contents($insc->foto),"is_foto"=>11]);
+               ->insert(["cve_accion" => 1948, "cve_persona" => $cve_persona_invitado, "cve_direccion" => $cve_direcion_invitado, "cve_profesion" => 16, "cve_parentesco" => 12, "estatus" => 1, "fecha_ingreso_accion" => Carbon::now(), "fecha_ingreso_club" => Carbon::now(), "fecha_alta" => Carbon::now(), "foto_socio" => file_get_contents($insc->foto), "is_foto" => 11]);
 
+
+            $cuota_ = DB::table("cuota")->where("cve_cuota", 102)->select("cuota", "precio")->first();
+            $cve_cargo_ = DB::table("cargo")->insertGetId([
+               "cve_accion" => 1914,
+               "cve_cuota" => 102,
+               "cve_persona" => $insc->cve_persona,
+               "concepto" => $cuota_->cuota,
+               "total" => $cuota_->precio,
+               "subtotal" => ($cuota_->precio / 116) * 100,
+               "iva" => (($cuota_->precio / 116) * 100) * .16,
+               "periodo" => date("m-Y")
+            ]);
+
+            $insc->cve_cargo = $cve_cargo_;
             $insc->cve_persona = $cve_persona_invitado;
             //}
 
@@ -180,7 +217,8 @@ class CursoVeranoDAO
             "cve_cargo" => $insc->cve_cargo,
             "cve_persona" => $insc->cve_persona,
             "cve_accion" => $insc->cve_accion,
-            "folio_pago" => $insc->folio,
+            "folio_pago" => $insc->folio ?? '',
+            "folio_boleta" => $insc->folio_boleta,
 
 
             "responsable" => $insc->tutor,
@@ -193,8 +231,8 @@ class CursoVeranoDAO
             "semana3" => $insc->semana3 ?? null,
             "semana4" => $insc->semana4 ?? null,
 
-            "calle_numero"=>$insc->calle_numero,
-            "colonia"=>$insc->colonia,
+            "calle_numero" => $insc->calle_numero,
+            "colonia" => $insc->colonia,
 
          ]);
 
@@ -226,91 +264,216 @@ class CursoVeranoDAO
          )
          ->get();
 
-         // dd($query);
+      // dd($query);
 
       return $query;
    }
 
-   // public static function GetCanchasHorarios()
-   // {
 
-   //    $canchas=DB::table("equipo")->where("cve_espacio_deportivo",10)->select('cve_equipo','nombre')->get();
+   public static function getInscripcionesCurso()
+   {
 
-   //    $canchas_map=$canchas->map(function($item){
-   //        return [
-   //          "equipo"=>$item->nombre,
-   //          "horarios"=>self::getHorarioEquipo($item->cve_equipo)           
-   //        ];
-   //    });
-
-   //    return $canchas_map;
-
-   // }
-
-   // public static function getHorarioEquipo($id){
-
-   // //   return Carbon::now()->timezone('America/Mexico_City');
-   //    $apartados = DB::table("apartados")
-   //       ->where("cve_equipo", $id)
-   //       ->where("fecha_fin", ">", Carbon::now()->timezone('America/Mazatlan')->toDateTimeString())
-   //       ->where("apartados.estatus",1);   
-
-   //    $total = $apartados->count();
-   //    $hora_maxima = $apartados->max("fecha_fin");
-
-
-   //    $apartados_activos = $apartados->select("cve_apartado",DB::raw("CONVERT(fecha_inicio ,TIME) AS a"), DB::raw("CONVERT(fecha_fin,TIME) AS b"), DB::raw("2 AS c"))->get();
-   //    $horarios = []; 
-
-   //    $apartados_activos_map=$apartados_activos->map(function($item){
-   //       $socios=DB::Table("validacion_apartado")
-   //       ->join("socios","validacion_apartado.cve_socio","socios.cve_socio")
-   //       ->join("persona","socios.cve_persona","persona.cve_persona")
-   //       ->where("cve_apartado",$item->cve_apartado)
-   //       ->selectRaw("CONCAT_WS(' ',nombre,apellido_paterno,apellido_materno) AS socio_name")
-   //       ->pluck("socio_name");
-
-   //    return [
-   //       "cve_apartado"=>$item->cve_apartado,
-   //       "a"=>$item->a,
-   //       "b"=>$item->b,
-   //       "c"=>$item->c,
-   //       "socios"=>$socios
-   //    ];
-   //    });
+      /*
+         select 
+               curso_verano_inscripcion.cve_curso_verano_inscripcion,
+               curso_verano_inscripcion.folio_pago,
+               if(curso_verano_inscripcion.semana1 is not null,1,0)+if(curso_verano_inscripcion.semana2 is not null,1,0)+if(curso_verano_inscripcion.semana3 is not null,1,0)+if(curso_verano_inscripcion.semana4 is not null,1,0) as semanas,
+               if(curso_verano_inscripcion.semana1 is not null,1,0) as semana1,
+               if(curso_verano_inscripcion.semana2 is not null,1,0) as semana2,
+               if(curso_verano_inscripcion.semana3 is not null,1,0) as semana3,
+               if(curso_verano_inscripcion.semana4 is not null,1,0) as semana4,
+               curso_verano_inscripcion.nadar,
+               curso_verano_inscripcion.responsable,
+               curso_verano_inscripcion.telefono_contacto,
+               curso_verano_inscripcion.fecha_inscripcion,
+               persona.nombre,
+               persona.apellido_paterno,
+               persona.apellido_materno,
+               persona.sexo,
+               persona.fecha_nacimiento,
+               curso_verano_programa.nombre as programa,
+               curso_verano_programa_grupo.nombre as grupo,
+               TIMESTAMPDIFF(YEAR, persona.fecha_nacimiento, CURDATE()) as edad
+         from curso_verano_inscripcion
+         inner join persona on curso_verano_inscripcion.cve_persona=persona.cve_persona
+         inner join curso_verano_programa on curso_verano_inscripcion.cve_curso_verano_programa=curso_verano_programa.cve_curso_verano_programa
+         inner join curso_verano_programa_grupo on curso_verano_inscripcion.cve_curso_verano_programa_grupo=curso_verano_programa_grupo.cve_curso_verano_programa_grupo
+       */
 
 
-   //    $duracion=DB::table("equipo")->where("cve_equipo",$id)->value("duracion_prestamo");
+
+      $query = DB::table("curso_verano_inscripcion")
+         ->join("persona", "curso_verano_inscripcion.cve_persona", "persona.cve_persona")
+         ->join("curso_verano_programa", "curso_verano_inscripcion.cve_curso_verano_programa", "curso_verano_programa.cve_curso_verano_programa")
+         ->join("curso_verano_programa_grupo", "curso_verano_inscripcion.cve_curso_verano_programa_grupo", "curso_verano_programa_grupo.cve_curso_verano_programa_grupo")
+         ->select(
+            "curso_verano_inscripcion.cve_curso_verano_inscripcion",
+            "curso_verano_inscripcion.folio_pago",
+            "curso_verano_inscripcion.folio_boleta",
+            "curso_verano_inscripcion.nadar",
+            "curso_verano_inscripcion.responsable",
+            "curso_verano_inscripcion.telefono_contacto",
+            "curso_verano_inscripcion.fecha_inscripcion",
+            "persona.nombre",
+            "persona.apellido_paterno",
+            "persona.apellido_materno",
+            "persona.sexo",
+            "persona.fecha_nacimiento",
+            "curso_verano_programa.nombre as programa",
+            "curso_verano_programa_grupo.nombre as grupo",
+            "curso_verano_inscripcion.estatus"
+         )
+         ->selectRaw("if(curso_verano_inscripcion.semana1 is not null,1,0)+if(curso_verano_inscripcion.semana2 is not null,1,0)+if(curso_verano_inscripcion.semana3 is not null,1,0)+if(curso_verano_inscripcion.semana4 is not null,1,0) as semanas")
+         ->selectRaw("if(curso_verano_inscripcion.semana1 is not null,1,0) as semana1")
+         ->selectRaw("if(curso_verano_inscripcion.semana2 is not null,1,0) as semana2")
+         ->selectRaw("if(curso_verano_inscripcion.semana3 is not null,1,0) as semana3")
+         ->selectRaw("if(curso_verano_inscripcion.semana4 is not null,1,0) as semana4")
+         ->selectRaw("TIMESTAMPDIFF(YEAR, persona.fecha_nacimiento, CURDATE()) as edad")
+         ->get();
+
+      // dd($query);
+
+      return $query;
+   }
 
 
-   //    switch ($total) {
-   //       case 0:
-   //          $horarios = DB::select("SELECT tabl.cve_apartado, tabl.a,tabl.b,tabl.c FROM (
-   //          SELECT 0 AS cve_apartado, CURTIME() AS a,date_add(CURTIME(),interval :duracion minute) AS b, 1 AS c UNION ALL
-   //          select 0 AS cve_apartado, DATE_ADD( date_add(CURTIME(),interval 5 minute) , INTERVAL  :duracion MINUTE) AS a, date_add(CURTIME(),interval :duracion*2 minute) AS b, 0 AS c union ALL
-   //          select 0 AS cve_apartado, DATE_ADD( date_add(CURTIME(),interval 5 MINUTE) , INTERVAL  :duracion*2 MINUTE) AS a, date_add(CURTIME(),interval :duracion*3 minute) AS b, 0 AS c
-   //          ) AS tabl;",["duracion"=>$duracion ?? 30]);          
-   //          break;
-   //       case 1:
-   //          $time_apartado = (new Carbon($hora_maxima))->format("H:i:s");
-   //          $horarios = DB::select("SELECT tabl.cve_apartado, tabl.a,tabl.b,tabl.c FROM (
-   //          SELECT 0 AS cve_apartado, date_add(CONVERT(:hora,TIME),interval 5 minute) AS a,date_add(CONVERT(:hora,TIME),interval :duracion minute) AS b, 1 AS c UNION ALL
-   //          select 0 AS cve_apartado, DATE_ADD( date_add(CONVERT(:hora,TIME),interval 5 minute) , INTERVAL  :duracion MINUTE) AS a, date_add(CONVERT(:hora,TIME),interval :duracion*2 minute) AS b, 0 AS c
-   //          ) AS tabl;", ["hora" => $time_apartado,"duracion"=>$duracion ?? 30]);
-   //          $horarios = $apartados_activos_map->concat($horarios);
-   //          break;
-   //       case 2:
-   //          $time_apartado = (new Carbon($hora_maxima))->format("H:i:s");
-   //          $horarios = DB::select("SELECT tabl.cve_apartado, tabl.a,tabl.b,tabl.c FROM (
-   //          SELECT 0 AS cve_apartado, date_add(CONVERT(:hora,TIME),interval 5 minute) AS a,date_add(CONVERT(:hora,TIME),interval :duracion minute) AS b, 1 AS c
-   //          ) AS tabl;", ["hora" => $time_apartado,"duracion"=>$duracion ?? 30]);
-   //          $horarios = $apartados_activos_map->concat($horarios);
-   //          break;
-   //       case 3:
-   //          $horarios = $apartados_activos_map;
-   //          break;
-   //    }
-   //    return $horarios;
-   // }
+   public static function getFotoSocio($id)
+   {
+      try {
+         return DB::table("socios")->where("socios.cve_persona", $id)->value("foto_socio");
+      } catch (\Exception $th) {
+      }
+   }
+
+
+   public static function getSemanasRestantes($id_inscripcion)
+   {
+
+      //select if(semana1 is null,1,0) as semana1,if(semana2 is null,1,0) as semana2,if(semana3 is null,1,0) as semana3,if(semana4 is null,1,0) as semana4 from curso_verano_inscripcion where cve_curso_verano_inscripcion=1
+      try {
+         return DB::table("curso_verano_inscripcion")->where("cve_curso_verano_inscripcion", $id_inscripcion)
+            ->selectRaw("if(semana1 is null,1,0) as semana1")
+            ->selectRaw("if(semana2 is null,1,0) as semana2")
+            ->selectRaw("if(semana3 is null,1,0) as semana3")
+            ->selectRaw("if(semana4 is null,1,0) as semana4")
+            ->first();
+      } catch (\Exception $th) {
+      }
+   }
+
+
+   public static function getColaboradorByNomina($nomina)
+   {
+
+      // SELECT persona.cve_persona,persona.nombre,persona.apellido_paterno,persona.apellido_materno 
+      // FROM colaborador
+      // INNER JOIN persona ON colaborador.cve_persona=persona.cve_persona
+      // WHERE colaborador.nomina=1007
+      try {
+         return DB::table("colaborador")
+            ->join("persona", "colaborador.cve_persona", "persona.cve_persona")
+            ->where("colaborador.nomina", $nomina)
+            ->select("persona.cve_persona", "persona.nombre", "persona.apellido_paterno", "persona.apellido_materno")
+            ->first();
+      } catch (\Exception $th) {
+      }
+   }
+
+
+   public static function bajaCursoVerano($id_inscripcion)
+   {
+
+      //select if(semana1 is null,1,0) as semana1,if(semana2 is null,1,0) as semana2,if(semana3 is null,1,0) as semana3,if(semana4 is null,1,0) as semana4 from curso_verano_inscripcion where cve_curso_verano_inscripcion=1
+      try {
+         return DB::table("curso_verano_inscripcion")->where("cve_curso_verano_inscripcion", $id_inscripcion)->update(["estatus"=>0]);
+      } catch (\Exception $th) {
+      }
+   }
+   
+   public static function reporteCursoVerano($params )
+   {
+
+      /*
+            SELECT 
+               curso_verano_inscripcion.cve_curso_verano_programa_grupo,
+               curso_verano_inscripcion.cve_accion,
+	            curso_verano_inscripcion.folio_pago,
+	            curso_verano_inscripcion.folio_boleta,
+	            persona.nombre,
+	            persona.apellido_paterno,
+	            persona.apellido_materno,
+	            persona.sexo,
+	            persona.fecha_nacimiento,
+               TIMESTAMPDIFF(YEAR, persona.fecha_nacimiento, CURDATE()) as edad,
+	            curso_verano_inscripcion.responsable,
+	            curso_verano_inscripcion.telefono_contacto,
+	            curso_verano_inscripcion.calle_numero,
+	            curso_verano_inscripcion.colonia,
+	            curso_verano_inscripcion.semana1,
+	            curso_verano_inscripcion.semana2,
+	            curso_verano_inscripcion.semana3,
+	            curso_verano_inscripcion.semana4,
+	            curso_verano_inscripcion.fecha_inscripcion,
+	            curso_verano_inscripcion.nadar,
+	            curso_verano_programa.nombre AS programa,
+	            curso_verano_programa_grupo.nombre AS grupo,
+	            cargo.concepto,
+	            concat(acciones.numero_accion,case acciones.clasificacion when 1 then 'A' when 2 then 'B' when 3 then 'C' ELSE '' END) AS accion,
+	            curso_verano_inscripcion.estatus,
+               case curso_verano_inscripcion.cve_accion when 1830 then 'I' when 1948 then 'C' ELSE 'S' END AS tipo,
+            FROM curso_verano_inscripcion
+            INNER JOIN cursos_verano ON curso_verano_inscripcion.cve_curso_verano=cursos_verano.cve_curso
+            INNER JOIN curso_verano_programa ON curso_verano_inscripcion.cve_curso_verano_programa=curso_verano_programa.cve_curso_verano_programa
+            INNER JOIN curso_verano_programa_grupo ON curso_verano_inscripcion.cve_curso_verano_programa_grupo=curso_verano_programa_grupo.cve_curso_verano_programa_grupo
+            INNER JOIN cargo On curso_verano_inscripcion.cve_cargo=cargo.cve_cargo
+            INNER JOIN persona ON curso_verano_inscripcion.cve_persona=persona.cve_persona
+            INNER JOIN acciones ON curso_verano_inscripcion.cve_accion=acciones.cve_accion
+      */
+      
+      try {
+         $query=DB::table("curso_verano_inscripcion")
+         ->join("cursos_verano" , "curso_verano_inscripcion.cve_curso_verano","cursos_verano.cve_curso")
+         ->join("curso_verano_programa" , "curso_verano_inscripcion.cve_curso_verano_programa","curso_verano_programa.cve_curso_verano_programa")
+         ->join("curso_verano_programa_grupo" , "curso_verano_inscripcion.cve_curso_verano_programa_grupo","curso_verano_programa_grupo.cve_curso_verano_programa_grupo")
+         ->join("cargo" , "curso_verano_inscripcion.cve_cargo","cargo.cve_cargo")
+         ->join("persona" , "curso_verano_inscripcion.cve_persona","persona.cve_persona")
+         ->join("acciones" , "curso_verano_inscripcion.cve_accion","acciones.cve_accion")
+         ->select(
+            "curso_verano_inscripcion.cve_curso_verano_programa_grupo",
+            "curso_verano_inscripcion.cve_accion",
+            "curso_verano_inscripcion.folio_pago",
+            "curso_verano_inscripcion.folio_boleta",
+            "persona.nombre",
+            "persona.apellido_paterno",
+            "persona.apellido_materno",
+            "persona.sexo",
+            "persona.fecha_nacimiento",
+            "curso_verano_inscripcion.responsable",
+            "curso_verano_inscripcion.telefono_contacto",
+            "curso_verano_inscripcion.calle_numero",
+            "curso_verano_inscripcion.colonia",
+            "curso_verano_inscripcion.semana1",
+            "curso_verano_inscripcion.semana2",
+            "curso_verano_inscripcion.semana3",
+            "curso_verano_inscripcion.semana4",
+            "curso_verano_inscripcion.fecha_inscripcion",
+            "curso_verano_inscripcion.nadar",
+            "curso_verano_programa.nombre AS programa",
+            "curso_verano_programa_grupo.nombre AS grupo",
+            "cargo.concepto",            
+            "curso_verano_inscripcion.estatus"
+         )
+         ->selectRaw("concat(acciones.numero_accion,case acciones.clasificacion when 1 then 'A' when 2 then 'B' when 3 then 'C' ELSE '' END) AS accion")
+         ->selectRaw("TIMESTAMPDIFF(YEAR, persona.fecha_nacimiento, CURDATE()) as edad")
+         ->selectRaw("if(curso_verano_inscripcion.semana1 IS NULL,0,1)+if(curso_verano_inscripcion.semana2 IS NULL,0,1)+if(curso_verano_inscripcion.semana3 IS NULL,0,1)+if(curso_verano_inscripcion.semana4 IS NULL,0,1) AS semanas")
+         ->selectRaw("case curso_verano_inscripcion.cve_accion when 1830 then 'I' when 1948 then 'C' ELSE 'S' END AS tipo");
+
+
+         return $query->get();
+      } catch (\Exception $th) {
+      }
+   }
+
+
 
 }
