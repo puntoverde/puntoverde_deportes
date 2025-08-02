@@ -77,6 +77,33 @@ class CursoVeranoController extends Controller
         $this->validate($req, $reglas);
         return CursoVeranoDAO::createInscripcion((object)$req->all());
     }
+   
+    public function updateInscripcion(Request $req,$id)
+    {
+        $reglas = [
+         "cve_persona"=>"required",                 
+         "folio_boleta"=>"required",
+         "tutor"=>"required",
+         "telefono_contacto"=>"required",
+         "nadar"=>"required",
+
+         "nombre"=>"required",
+         "paterno"=>"required",
+         "materno"=>"required",
+         "nacimiento"=>"required|date",
+         "genero"=>"required",
+         "calle_numero"=>"required",
+         "colonia"=>"required",
+         "observaciones"=>"required"
+        ];        
+
+
+
+        $this->validate($req, $reglas);
+
+        // dd($req->all());
+        return CursoVeranoDAO::updateInscripcion($id,(object)$req->all());
+    }
 
     public function getSociosAccion(Request $req)
     {
@@ -127,6 +154,23 @@ class CursoVeranoController extends Controller
     {
         $data_send=(object)$req->all();
         return CursoVeranoDAO::reporteCursoVerano($data_send);   
+       
+    }
+    
+    
+    public function getDatosInscripcion($id)
+    {                
+        return response()->json(CursoVeranoDAO::getDatosInscripcion($id));
+       
+    }
+   
+    public function createReingreso(Request $req,$id)
+    {                
+
+        // $reglas = ["cve_curso_inscripcion"=>"required"];        
+        // $this->validate($req, $reglas);
+     
+        return response()->json(CursoVeranoDAO::createReingreso($id,$req->all()));
        
     }
 
