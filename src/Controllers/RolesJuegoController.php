@@ -78,5 +78,100 @@ class RolesJuegoController extends Controller
         $partido=$req->input("partido");
         return RolesJuegoDAO::SuspenderPartido($partido);
     }
+    
+    public function AgregarGol(Request $req)
+    {
+        $reglas = ["partido"=>"required","jugador"=>"required","gol"=>"required","local_visita"=>"required"];        
+        $this->validate($req, $reglas);
+        $data=(object)$req->all();
+        return RolesJuegoDAO::AgregarGol($data);
+    }
+
+    public function AgergarTarjetaAmarilla(Request $req)
+    {
+        $reglas = ["partido"=>"required","jugador"=>"required"];        
+        $this->validate($req, $reglas);
+        $data=(object)$req->all();
+        return RolesJuegoDAO::AgergarTarjetaAmarilla($data);
+    }
+
+    public function AgergarTarjetaRoja(Request $req)
+    {
+        $reglas = ["partido"=>"required","jugador"=>"required"];        
+        $this->validate($req, $reglas);
+        $data=(object)$req->all();
+        return RolesJuegoDAO::AgergarTarjetaRoja($data);
+    }
+
+    public function getHorarioFutbol(Request $req)
+    {
+      $reglas = ["torneo"=>"required"];        
+        $this->validate($req, $reglas);
+        $torneo=$req->input("torneo");
+        return RolesJuegoDAO::getHorarioFutbol($torneo);  
+    }
+    
+    public function getJugadorEquipoPartido(Request $req)
+    {
+      $reglas = ["partido"=>"required","equipo"=>"required"];
+        $this->validate($req, $reglas);
+        $equipo=$req->input("equipo");
+        $partido=$req->input("partido");
+        return RolesJuegoDAO::getJugadorEquipoPartido($equipo,$partido);  
+    }
+
+    //  return response($img)->header('Content-type','image/png');
+    public function getViewFotoJugador(Request $req)
+    {    
+        $jugador=$req->input("cve_jugador");
+        $img=RolesJuegoDAO::getFotoJugador($jugador);
+        if($img==null){            
+            $img=file_get_contents("../upload/no-foto.png");          
+            return response($img)->header('Content-type','image/png');            
+        }
+        else{        
+            return response($img)->header('Content-type','image/png');
+        }
+    }
+
+    public function getEstadisticasPartido(Request $req)
+    {
+        $reglas = ["partido"=>"required"];        
+        $this->validate($req, $reglas);
+        $data=$req->input("partido");
+        return RolesJuegoDAO::getEstadisticasPartido($data);
+    }
+
+    public function tblaGeneral(Request $req)
+    {
+        $reglas = ["torneo"=>"required"];        
+        $this->validate($req, $reglas);
+        $torneo=$req->input("torneo");
+        return RolesJuegoDAO::tblaGeneral($torneo);
+    }
+    
+    public function getEstadisticasGoles(Request $req)
+    {
+        $reglas = ["torneo"=>"required"];        
+        $this->validate($req, $reglas);
+        $torneo=$req->input("torneo");
+        return RolesJuegoDAO::getEstadisticasGoles($torneo);
+    }
+    
+    public function getEstadisticasAmarillas(Request $req)
+    {
+        $reglas = ["torneo"=>"required"];        
+        $this->validate($req, $reglas);
+        $torneo=$req->input("torneo");
+        return RolesJuegoDAO::getEstadisticasAmarillas($torneo);
+    }
+    
+    public function getEstadisticasRojas(Request $req)
+    {
+        $reglas = ["torneo"=>"required"];        
+        $this->validate($req, $reglas);
+        $torneo=$req->input("torneo");
+        return RolesJuegoDAO::getEstadisticasRojas($torneo);
+    }
    
 }
